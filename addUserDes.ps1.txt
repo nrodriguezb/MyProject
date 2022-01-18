@@ -1,0 +1,144 @@
+Function Add-User{
+$continue = "S"
+
+ while ($continue -eq "S"){
+	$continue="N"
+	$username = Read-Host 'Ingrese el nombre del usuario'
+	$name = Read-Host 'Ingrese el nombre'
+	$surname = Read-Host 'Ingrese el apellido'
+	$email = Read-Host 'Ingrese el mail'
+	$pass = Read-Host 'Ingrese la contrasenia'
+	$full_name = $name + ' ' + $surname
+    try{
+        New-ADUser -Name $full_name  -GivenName $name -Surname $surname -DisplayName $full_name -SamAccountName $username -UserPrincipalName $email  -Email $email -AccountPassword (ConvertTo-SecureString $pass -AsPlainText -Force) -Enabled $true -path "OU=New-AzureAD,DC=technisys,DC=net" -ErrorAction Stop
+        Get-ADUser -Identity $username
+        echo "Usuario agregado correctamente"
+        $username= Get-ADUser -Identity $username
+	Read-Host 'Espere unos 3 segundos y presione enter'
+        Add-User-Group($username)	
+    }
+    catch{
+        Write-Warning "Failed to create user: $($error[0])"
+    }	
+    $continue = Read-Host «Desea seguir agregando S/N»  
+ }
+}
+
+Function Add-User-Group{
+    param ( [string] $username )
+    $group=Get-ADGroup -Identity "CN=OpenVPN_users,OU=OpenVPN,DC=technisys,DC=net"
+    try{
+        Add-ADGroupMember -Identity $Group -Members $username;  
+        echo "Usuario agregado al grupo OPENVPN correctamente";
+    }
+    catch{
+       Write-Warning "Failed to create user: $($error[0])"
+    }
+    echo "Usuario creado"   
+    Read-Host "Presione enter para continuar"
+}
+
+Function Del-User{
+    $username=Read-Host "Ingrese el nombre de usuario"
+    echo "Chequear que la cuenta a deshabilitar sea la siguiente"
+    Get-ADUser -Identity $username
+    $check=Read-Host "Es correcta S/N?" 
+    if ($check -eq "S"){
+         Disable-ADAccount -Identity $username
+         Get-ADUser $username | Move-ADObject -TargetPath 'OU=Users-Disabled,DC=technisys,DC=net'  
+    }
+    else{
+         echo "Verificar que el usuario exista o que se haya escrito correctamente"
+    }
+
+}
+
+Function Reset-Password-User{
+    $continue = "S"
+    $Error.clear()
+    $i=0
+    while ($continue -eq "S"){
+        $username=Read-Host "Ingrese el nombre de usuario: "
+        echo "Chequear que el siguiente usuario sea el correcto"
+        Get-ADUSer -Identity $username
+        if ($error[$i].CategoryInfo."Category" -ne "ObjectNotFound"){
+            $check=Read-Host "Es correcta S/N?" 
+                if ($check -eq "S"){
+                    $pass=Read-Host "Ingrese la contrasenia: " -AsSecureString
+                    Unlock-ADAccount -Identity $username
+                    Set-ADAccountPassword $username -NewPassword $pass -Reset
+                    echo "La contraseña fue cambiada satisfactoriamente"
+                    $continue = "N"
+                }
+                else{
+                   $continue = Read-Host «Desea volver a intentarlo S/N»  
+                }
+        }
+        else{
+            echo "Verificar que el usuario exista o que se haya escrito correctamente"
+            $i=$i + 1
+            $continue = Read-Host «Desea volver a intentarlo S/N»    
+        }
+    } 
+}
+
+Function Unlock-User{ 
+    $continue = "S"
+    $Error.clear()
+    $i=0
+    While ($continue -eq "S"){    
+        $username=Read-Host "Ingrese el nombre de usuario: "
+        echo "Chequear que el siguiente usuario sea el correcto"
+        Get-ADUSer -Identity $username
+        if ($Error[$i].CategoryInfo."Category" -ne "ObjectNotFound"){
+            $check=Read-Host "Es correcta S/N?" 
+                if ($check -eq "S"){
+                    Unlock-ADAccount -Identity $username
+                    echo "La cuenta fue desbloqueada satisfactoriamente"
+                }
+                else{
+                    $continue = Read-Host «Desea volver a intentarlo S/N»  
+                }
+        }
+        else{
+            echo "Verificar que el usuario exista o que se haya escrito correctamente"
+            $i=$i + 1
+            $continue = Read-Host «Desea volver a intentarlo S/N» 
+        }
+    }
+}
+
+$seguir="S"
+    while ($seguir -eq "S"){
+        clear
+        echo "1.Agregar Usuario Interno"
+        echo "2.Deshabilitar cuenta"
+        echo "3.Restablecer contraseña"
+        echo "4.Desbloquear Usuario"
+        echo "5.Salir"
+        $action = Read-Host "Ingrese el numero de operacion"
+        clear
+        $seguir="N"
+           switch($action){
+              1{Add-User
+                $seguir=Read-Host "Continuar con la ejecucion S/N?"
+                break
+              }
+              2{Del-User
+                $seguir=Read-Host "Continuar con la ejecucion S/N?"
+                break
+              }
+              3{
+                Reset-Password-User
+                $seguir=Read-Host "Continuar con la ejecucion S/N?"
+                break
+              }
+              4{
+                Unlock-User
+                $seguir=Read-Host "Continuar con la ejecucion S/N?"
+                break
+              }
+              5{break}  
+           }     
+    }
+Read-Host «Presione Enter para salir»
