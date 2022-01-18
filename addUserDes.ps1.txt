@@ -10,7 +10,7 @@ $continue = "S"
 	$pass = Read-Host 'Ingrese la contrasenia'
 	$full_name = $name + ' ' + $surname
     try{
-        New-ADUser -Name $full_name  -GivenName $name -Surname $surname -DisplayName $full_name -SamAccountName $username -UserPrincipalName $email  -Email $email -AccountPassword (ConvertTo-SecureString $pass -AsPlainText -Force) -Enabled $true -path "OU=New-AzureAD,DC=technisys,DC=net" -ErrorAction Stop
+        New-ADUser -Name $full_name  -GivenName $name -Surname $surname -DisplayName $full_name -SamAccountName $username -UserPrincipalName $email  -Email $email -AccountPassword (ConvertTo-SecureString $pass -AsPlainText -Force) -Enabled $true -path "OU=,DC=,DC=" -ErrorAction Stop
         Get-ADUser -Identity $username
         echo "Usuario agregado correctamente"
         $username= Get-ADUser -Identity $username
@@ -20,13 +20,13 @@ $continue = "S"
     catch{
         Write-Warning "Failed to create user: $($error[0])"
     }	
-    $continue = Read-Host «Desea seguir agregando S/N»  
+    $continue = Read-Host Â«Desea seguir agregando S/NÂ»  
  }
 }
 
 Function Add-User-Group{
     param ( [string] $username )
-    $group=Get-ADGroup -Identity "CN=OpenVPN_users,OU=OpenVPN,DC=technisys,DC=net"
+    $group=Get-ADGroup -Identity "CN=,OU=,DC=,DC="
     try{
         Add-ADGroupMember -Identity $Group -Members $username;  
         echo "Usuario agregado al grupo OPENVPN correctamente";
@@ -45,7 +45,7 @@ Function Del-User{
     $check=Read-Host "Es correcta S/N?" 
     if ($check -eq "S"){
          Disable-ADAccount -Identity $username
-         Get-ADUser $username | Move-ADObject -TargetPath 'OU=Users-Disabled,DC=technisys,DC=net'  
+         Get-ADUser $username | Move-ADObject -TargetPath 'OU=,DC=,DC='  
     }
     else{
          echo "Verificar que el usuario exista o que se haya escrito correctamente"
@@ -67,17 +67,17 @@ Function Reset-Password-User{
                     $pass=Read-Host "Ingrese la contrasenia: " -AsSecureString
                     Unlock-ADAccount -Identity $username
                     Set-ADAccountPassword $username -NewPassword $pass -Reset
-                    echo "La contraseña fue cambiada satisfactoriamente"
+                    echo "La contraseÃ±a fue cambiada satisfactoriamente"
                     $continue = "N"
                 }
                 else{
-                   $continue = Read-Host «Desea volver a intentarlo S/N»  
+                   $continue = Read-Host Â«Desea volver a intentarlo S/NÂ»  
                 }
         }
         else{
             echo "Verificar que el usuario exista o que se haya escrito correctamente"
             $i=$i + 1
-            $continue = Read-Host «Desea volver a intentarlo S/N»    
+            $continue = Read-Host Â«Desea volver a intentarlo S/NÂ»    
         }
     } 
 }
@@ -97,13 +97,13 @@ Function Unlock-User{
                     echo "La cuenta fue desbloqueada satisfactoriamente"
                 }
                 else{
-                    $continue = Read-Host «Desea volver a intentarlo S/N»  
+                    $continue = Read-Host Â«Desea volver a intentarlo S/NÂ»  
                 }
         }
         else{
             echo "Verificar que el usuario exista o que se haya escrito correctamente"
             $i=$i + 1
-            $continue = Read-Host «Desea volver a intentarlo S/N» 
+            $continue = Read-Host Â«Desea volver a intentarlo S/NÂ» 
         }
     }
 }
@@ -113,7 +113,7 @@ $seguir="S"
         clear
         echo "1.Agregar Usuario Interno"
         echo "2.Deshabilitar cuenta"
-        echo "3.Restablecer contraseña"
+        echo "3.Restablecer contraseÃ±a"
         echo "4.Desbloquear Usuario"
         echo "5.Salir"
         $action = Read-Host "Ingrese el numero de operacion"
@@ -141,4 +141,4 @@ $seguir="S"
               5{break}  
            }     
     }
-Read-Host «Presione Enter para salir»
+Read-Host Â«Presione Enter para salirÂ»
