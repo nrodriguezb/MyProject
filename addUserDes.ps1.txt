@@ -95,6 +95,7 @@ Function Unlock-User{
                 if ($check -eq "S"){
                     Unlock-ADAccount -Identity $username
                     echo "La cuenta fue desbloqueada satisfactoriamente"
+		    $continue = "N"
                 }
                 else{
                     $continue = Read-Host «Desea volver a intentarlo S/N»  
